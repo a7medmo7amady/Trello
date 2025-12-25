@@ -1,25 +1,13 @@
 import { createContext, useReducer, useEffect, useMemo } from 'react';
 import { boardReducer, initialState, ACTIONS } from './boardReducer';
-import { loadFromStorage, saveToStorage } from '../services/storage';
+import { loadFromStorage, saveToStorage, loadFromStorageAsync } from '../services/storage';
 
 export const BoardStateContext = createContext(null);
 export const BoardDispatchContext = createContext(null);
 
 const STORAGE_KEY = 'kanban-board-state';
 
-const seedData = {
-  lists: [
-    { id: 'list-1', title: 'Backlog', order: 0, archived: false, createdAt: new Date().toISOString(), lastModifiedAt: new Date().toISOString(), version: 1 },
-    { id: 'list-2', title: 'In Progress', order: 1, archived: false, createdAt: new Date().toISOString(), lastModifiedAt: new Date().toISOString(), version: 1 },
-    { id: 'list-3', title: 'Review', order: 2, archived: false, createdAt: new Date().toISOString(), lastModifiedAt: new Date().toISOString(), version: 1 },
-    { id: 'list-4', title: 'Done', order: 3, archived: false, createdAt: new Date().toISOString(), lastModifiedAt: new Date().toISOString(), version: 1 },
-  ],
-  cards: [
-    { id: 'card-1', listId: 'list-1', title: 'Set up project structure', description: 'Initialize Vite React project with Tailwind', tags: ['setup'], order: 0, createdAt: new Date().toISOString(), lastModifiedAt: new Date().toISOString(), version: 1 },
-    { id: 'card-2', listId: 'list-1', title: 'Create core components', description: 'Build Board, ListColumn, Card components', tags: ['components'], order: 1, createdAt: new Date().toISOString(), lastModifiedAt: new Date().toISOString(), version: 1 },
-    { id: 'card-3', listId: 'list-2', title: 'Implement drag and drop', description: 'Add HTML5 DnD API support', tags: ['feature', 'dnd'], order: 0, createdAt: new Date().toISOString(), lastModifiedAt: new Date().toISOString(), version: 1 },
-  ],
-};
+import seedData from '../data/seed.json';
 
 export const BoardProvider = ({ children }) => {
   const [state, dispatch] = useReducer(boardReducer, initialState, (initial) => {
@@ -90,6 +78,39 @@ export const BoardProvider = ({ children }) => {
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
+
+  // Async load for IndexedDB fallback
+  useEffect(() => {
+    const loadAsync = async () => {
+      // Only attempt to load if we don't have valid data or if we suspect we might have more data in IDB
+      // But simpler: just try to load from IDB if we're using seed data or partial data
+      try {
+        const stored = await loadFromStorageAsync(STORAGE_KEY);
+        if (stored && stored.lists && stored.lists.length > 0) {
+          // We found data in storage (maybe IDB) that we missed in the initial sync load
+          // Only dispatch if it's different/newer, but for now just loading it if state is default
+          // Checking if current state is essentially default/empty compared to loaded
+          if (JSON.stringify(state.lists) === JSON.stringify(seedData.lists) &&
+            JSON.stringify(state.cards) === JSON.stringify(seedData.cards) &&
+            stored.cards.length !== seedData.cards.length) {
+
+            dispatch({
+              type: ACTIONS.APPLY_SERVER_STATE,
+              payload: {
+                lists: stored.lists,
+                cards: stored.cards,
+                lastSyncedAt: stored.lastSyncedAt,
+              },
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load async data:", err);
+      }
+    };
+    loadAsync();
+  }, []);
+
 
   const contextValue = useMemo(() => state, [state]);
   const dispatchValue = useMemo(() => dispatch, []);
