@@ -36,8 +36,8 @@ describe('BoardProvider', () => {
             </BoardProvider>
         );
 
-        // Default seed data has 4 lists
-        expect(screen.getByTestId('list-count')).toHaveTextContent('4');
+        // Default seed data has 5 lists
+        expect(screen.getByTestId('list-count')).toHaveTextContent('5');
     });
 
     it('initializes with stored data when available', () => {

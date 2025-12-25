@@ -82,8 +82,13 @@ const Toolbar = () => {
       {/* Conflict Modal - Simple inline */}
       {foundConflicts.length > 0 && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
-          <div className="w-full max-w-2xl bg-neutral-900 border border-amber-500 rounded-xl p-6">
-            <h2 className="text-xl font-bold text-white mb-4">
+          <div
+            className="w-full max-w-2xl bg-neutral-900 border border-amber-500 rounded-xl p-6"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="conflict-modal-title"
+          >
+            <h2 id="conflict-modal-title" className="text-xl font-bold text-white mb-4">
               Conflict Found ({foundConflicts.length})
             </h2>
 

@@ -1,8 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
 import { loadFromStorage, saveToStorage, loadFromStorageAsync } from './storage';
 
-const MOCK_DELAY = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test' ? 0 : 300;
-const FAILURE_RATE = 0; // Disabled random failures for stability
+const isTest = import.meta.env.TEST;
+const MOCK_DELAY = isTest ? 0 : 300; // Increased delay for realism
+const FAILURE_RATE = isTest ? 0 : 0.05;
 const SERVER_STORAGE_KEY = 'mock_server_db';
 
 // We need an async getter since we might read from IDB
@@ -27,6 +28,7 @@ const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const shouldFail = () => FAILURE_RATE > 0 && Math.random() < FAILURE_RATE;
 
 const simulateLatency = async () => {
+  if (isTest) return;
   const latency = MOCK_DELAY + Math.random() * 200;
   await delay(latency);
 };

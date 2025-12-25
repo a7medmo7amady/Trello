@@ -1,5 +1,11 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as api from '../services/api';
+
+vi.mock('../services/storage', () => ({
+  loadFromStorage: vi.fn(),
+  saveToStorage: vi.fn(),
+  loadFromStorageAsync: vi.fn().mockResolvedValue(null),
+}));
 
 describe('api service', () => {
   beforeEach(() => {
