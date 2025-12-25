@@ -16,6 +16,13 @@ const CardDetailModal = ({ card, onClose }) => {
   const previouslyFocusedRef = useRef(null);
 
   useEffect(() => {
+    setTitle(card.title);
+    setDescription(card.description || '');
+    setTags(card.tags || []);
+    setErrors({});
+  }, [card]);
+
+  useEffect(() => {
     previouslyFocusedRef.current = document.activeElement;
     titleInputRef.current?.focus();
     document.body.style.overflow = 'hidden';

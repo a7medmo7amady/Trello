@@ -27,7 +27,7 @@ const Board = () => {
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const [isAddingList, setIsAddingList] = useState(false);
   const [newListTitle, setNewListTitle] = useState('');
-  const [selectedCard, setSelectedCard] = useState(null);
+  const [selectedCardId, setSelectedCardId] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState(null);
 
   const dragGhostRef = useRef(null);
@@ -38,6 +38,11 @@ const Board = () => {
       .filter((list) => !list.archived)
       .sort((a, b) => (a.order || 0) - (b.order || 0));
   }, [state?.lists]);
+
+  const selectedCard = useMemo(() => {
+    if (!selectedCardId || !state?.cards) return null;
+    return state.cards.find(c => c.id === selectedCardId) || null;
+  }, [state?.cards, selectedCardId]);
 
   const getCardsForList = useCallback(
     (listId) => {
@@ -60,10 +65,12 @@ const Board = () => {
       })
     );
 
+    // We add these classes to the target element
     e.target.classList.add('opacity-50', 'rotate-2');
 
     if (dragGhostRef.current) {
       dragGhostRef.current.textContent = card.title;
+      // Use the ghost element for the drag image
       e.dataTransfer.setDragImage(dragGhostRef.current, 0, 0);
     }
   }, []);
@@ -87,6 +94,7 @@ const Board = () => {
   }, []);
 
   const handleDragLeave = useCallback((e) => {
+    // Only clear if we're leaving the container, not entering a child
     if (!e.currentTarget.contains(e.relatedTarget)) {
       setDragOverListId(null);
       setDragOverIndex(null);
@@ -102,18 +110,23 @@ const Board = () => {
       const { id: cardId, sourceListId } = draggedCard;
 
       const targetCards = getCardsForList(targetListId);
+      // Calculate final index
       const finalIndex =
         targetIndex !== null ? targetIndex : targetCards.length;
 
       if (sourceListId === targetListId) {
+        // Reordering in same list
         const currentIndex = targetCards.findIndex((c) => c.id === cardId);
+        // Only move if index changed (and not just moving to self/next slot which is same visually)
         if (currentIndex !== finalIndex && currentIndex !== finalIndex - 1) {
           reorderCard(cardId, targetListId, finalIndex);
         }
       } else {
+        // Moving to different list
         moveCard(cardId, sourceListId, targetListId, finalIndex);
       }
 
+      // Cleanup
       setDraggedCard(null);
       setDragOverListId(null);
       setDragOverIndex(null);
@@ -167,11 +180,11 @@ const Board = () => {
   }, [archiveList]);
 
   const handleCardClick = useCallback((card) => {
-    setSelectedCard(card);
+    setSelectedCardId(card.id);
   }, []);
 
   const handleCloseModal = useCallback(() => {
-    setSelectedCard(null);
+    setSelectedCardId(null);
   }, []);
 
   return (
