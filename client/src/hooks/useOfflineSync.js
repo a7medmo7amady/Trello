@@ -3,9 +3,7 @@ import { BoardStateContext, BoardDispatchContext, ACTIONS } from '../context/Boa
 import * as api from '../services/api';
 import { saveToStorage, loadFromStorage } from '../services/storage';
 
-const SYNC_INTERVAL = 30000;
-const RETRY_DELAY = 5000;
-const MAX_RETRIES = 3;
+const SYNC_INTERVAL = 3000; // Faster sync for testing (3s)
 const SYNC_QUEUE_KEY = 'kanban-sync-queue';
 
 export const useOfflineSync = () => {
@@ -15,197 +13,157 @@ export const useOfflineSync = () => {
   const [lastSyncError, setLastSyncError] = useState(null);
   const [pendingChanges, setPendingChanges] = useState(0);
   const syncIntervalRef = useRef(null);
-  const retryCountRef = useRef(0);
   const isMountedRef = useRef(true);
 
+  // Ref to hold latest state to avoid stale closures in async sync loop
+  const stateRef = useRef(state);
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  // Persistence for queue
   useEffect(() => {
     isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
+    if (stateRef.current?.syncQueue) {
+      saveToStorage(SYNC_QUEUE_KEY, stateRef.current.syncQueue);
+      setPendingChanges(stateRef.current.syncQueue.length);
+    }
+    return () => { isMountedRef.current = false; };
+  }, [state?.syncQueue]);
+
+  // Initial Load from Server
+  useEffect(() => {
+    const init = async () => {
+      // Initialize mocks if empty
+      if (stateRef.current?.lists && stateRef.current?.cards) {
+        api.initializeServerState({ lists: stateRef.current.lists, cards: stateRef.current.cards });
+      }
+
+      // Fetch initial server state
+      try {
+        const serverState = await api.getServerState();
+        if (serverState && isMountedRef.current) {
+          dispatch({
+            type: ACTIONS.APPLY_SERVER_STATE,
+            payload: {
+              lists: serverState.lists,
+              cards: serverState.cards,
+              lastSyncedAt: new Date().toISOString(),
+            },
+          });
+        }
+      } catch (err) {
+        console.error("Initial sync failed", err);
+      }
     };
+    init();
   }, []);
 
-  const persistQueue = useCallback((queue) => {
-    saveToStorage(SYNC_QUEUE_KEY, queue);
-  }, []);
-
-  const _loadPersistedQueue = useCallback(() => {
-    return loadFromStorage(SYNC_QUEUE_KEY) || [];
-  }, []);
-
-  const processQueue = useCallback(async () => {
-    if (isSyncing) return { success: false, error: 'Already syncing', processed: 0 };
-
-    if (!state || state.syncQueue.length === 0) {
-      setPendingChanges(0);
-      return { success: true, processed: 0 };
-    }
-
-    if (!navigator.onLine) {
-      return { success: false, error: 'Offline', processed: 0 };
-    }
+  const processSync = useCallback(async () => {
+    if (isSyncing || !navigator.onLine) return;
 
     setIsSyncing(true);
     setLastSyncError(null);
 
+    // Capture latest state reference
+    const currentState = stateRef.current;
+
     try {
-      const queueToProcess = [...state.syncQueue];
-      setPendingChanges(queueToProcess.length);
+      // 1. Push Local Changes
+      if (currentState?.syncQueue?.length > 0) {
+        const queueToProcess = [...currentState.syncQueue];
+        const result = await api.syncChanges(queueToProcess);
 
-      const result = await api.syncChanges(queueToProcess);
+        // Remove processed items
+        if (result && result.results) {
+          const successfulIds = result.results
+            .filter((r) => r.success)
+            .map((r) => r.changeId);
 
-      if (!isMountedRef.current) return { success: false, error: 'Unmounted', processed: 0 };
-
-      const successfulIds = result.results
-        .filter((r) => r.success)
-        .map((r) => r.changeId);
-
-      for (const id of successfulIds) {
-        dispatch({ type: ACTIONS.REMOVE_FROM_QUEUE, payload: { queueId: id } });
-      }
-
-      const failedResults = result.results.filter((r) => !r.success);
-      if (failedResults.length > 0) {
-        setLastSyncError(`${failedResults.length} changes failed to sync`);
-      }
-
-      dispatch({ type: ACTIONS.MARK_SYNCED });
-
-      if (result.serverState) {
-        const conflicts = [];
-
-        for (const serverList of result.serverState.lists) {
-          const localList = state.lists.find((l) => l.id === serverList.id);
-          if (localList) {
-            const conflict = api.checkForConflicts(localList, serverList);
-            if (conflict) {
-              conflicts.push(conflict);
-            }
+          for (const id of successfulIds) {
+            dispatch({ type: ACTIONS.REMOVE_FROM_QUEUE, payload: { queueId: id } });
           }
         }
+      }
 
-        for (const serverCard of result.serverState.cards) {
-          const localCard = state.cards.find((c) => c.id === serverCard.id);
-          if (localCard) {
-            const conflict = api.checkForConflicts(localCard, serverCard);
-            if (conflict) {
-              conflicts.push(conflict);
-            }
-          }
+      // 2. Pull Server State & Check Conflicts
+      const serverState = await api.getServerState();
+      if (!serverState) return;
+
+      // refresh current state again in case changes happened while awaiting above
+      const freshState = stateRef.current;
+      const conflicts = [];
+
+      // Check Lists
+      for (const serverList of serverState.lists) {
+        const localList = freshState.lists.find(l => l.id === serverList.id);
+        if (localList) {
+          const conflict = api.checkForConflicts(localList, serverList);
+          if (conflict) conflicts.push(conflict);
         }
+      }
+      // Check Cards
+      for (const serverCard of serverState.cards) {
+        const localCard = freshState.cards.find(c => c.id === serverCard.id);
+        if (localCard) {
+          const conflict = api.checkForConflicts(localCard, serverCard);
+          if (conflict) conflicts.push(conflict);
+        }
+      }
 
-        for (const conflict of conflicts) {
+      // Dispatch conflicts if any
+      for (const conflict of conflicts) {
+        // Check if we already have this conflict to avoid potential dupes
+        const exists = freshState.conflicts.find(c => c.itemId === conflict.itemId);
+        if (!exists) {
           dispatch({ type: ACTIONS.MERGE_CONFLICT, payload: { conflict } });
         }
       }
 
-      retryCountRef.current = 0;
-      setPendingChanges(state.syncQueue.length - successfulIds.length);
-
-      return { success: true, processed: successfulIds.length };
-    } catch (error) {
-      if (!isMountedRef.current) return { success: false, error: 'Unmounted', processed: 0 };
-
-      setLastSyncError(error.message);
-      retryCountRef.current += 1;
-
-      if (retryCountRef.current < MAX_RETRIES) {
-        setTimeout(() => {
-          if (isMountedRef.current && navigator.onLine) {
-            processQueue();
+      // If no conflicts, auto-update local state to match server (convergence)
+      // This is crucial for "Use Server" to stick, and for general sync
+      if (conflicts.length === 0) {
+        // Optimization: Only dispatch if actually deeper diff? 
+        // For now, robustly applying server state ensures consistency
+        dispatch({
+          type: ACTIONS.APPLY_SERVER_STATE,
+          payload: {
+            lists: serverState.lists,
+            cards: serverState.cards,
+            lastSyncedAt: new Date().toISOString(),
           }
-        }, RETRY_DELAY * retryCountRef.current);
+        });
       }
 
-      return { success: false, error: error.message, processed: 0 };
+      dispatch({ type: ACTIONS.MARK_SYNCED });
+
+    } catch (e) {
+      setLastSyncError(e.message);
     } finally {
-      if (isMountedRef.current) {
-        setIsSyncing(false);
-      }
+      if (isMountedRef.current) setIsSyncing(false);
     }
-  }, [state, dispatch]);
+  }, [dispatch, isSyncing]);
 
   const forceSync = useCallback(async () => {
-    retryCountRef.current = 0;
-    return processQueue();
-  }, [processQueue]);
+    return processSync();
+  }, [processSync]);
 
-  useEffect(() => {
-    const handleOnline = () => {
-      if (state?.syncQueue?.length > 0) {
-        processQueue();
-      }
-    };
-
-    window.addEventListener('online', handleOnline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-    };
-  }, [state?.syncQueue?.length, processQueue]);
-
+  // Interval Sync
   useEffect(() => {
     syncIntervalRef.current = setInterval(() => {
-      if (navigator.onLine && state?.syncQueue?.length > 0) {
-        processQueue();
-      }
+      processSync();
     }, SYNC_INTERVAL);
-
-    return () => {
-      if (syncIntervalRef.current) {
-        clearInterval(syncIntervalRef.current);
-      }
-    };
-  }, [state?.syncQueue?.length, processQueue]);
-
-  useEffect(() => {
-    if (state?.syncQueue) {
-      persistQueue(state.syncQueue);
-      setPendingChanges(state.syncQueue.length);
-    }
-  }, [state?.syncQueue, persistQueue]);
-
-  useEffect(() => {
-    if (state?.lists && state?.cards) {
-      api.initializeServerState({ lists: state.lists, cards: state.cards });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const getServerState = useCallback(async () => {
-    try {
-      return await api.getServerState();
-    } catch (error) {
-      setLastSyncError(error.message);
-      return null;
-    }
-  }, []);
-
-  const applyServerState = useCallback(
-    (serverState) => {
-      dispatch({
-        type: ACTIONS.APPLY_SERVER_STATE,
-        payload: {
-          lists: serverState.lists,
-          cards: serverState.cards,
-          lastSyncedAt: new Date().toISOString(),
-        },
-      });
-    },
-    [dispatch]
-  );
+    return () => clearInterval(syncIntervalRef.current);
+  }, [processSync]);
 
   return {
     isSyncing,
-    isOnline: state?.isOnline ?? navigator.onLine,
+    isOnline: navigator.onLine,
     lastSyncError,
     pendingChanges,
-    syncQueue: state?.syncQueue || [],
-    lastSyncedAt: state?.lastSyncedAt,
-    forceSync,
-    getServerState,
-    applyServerState,
     conflicts: state?.conflicts || [],
+    forceSync
   };
 };
 

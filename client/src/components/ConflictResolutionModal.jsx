@@ -10,7 +10,8 @@ const ConflictResolutionModal = ({
     conflict,
     onResolve,
 }) => {
-    const { localVersion, serverVersion, type } = conflict;
+    // Default to empty objects if versions are missing to prevent crashes
+    const { localVersion = {}, serverVersion = {}, type } = conflict || {};
 
     const DiffField = ({ label, local, server }) => {
         const isDifferent = JSON.stringify(local) !== JSON.stringify(server);

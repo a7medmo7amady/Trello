@@ -418,20 +418,15 @@ export const boardReducer = (state, action) => {
 
     case ACTIONS.RESOLVE_CONFLICT: {
       const { conflictId, resolution } = action.payload;
-      console.log('Resolving conflict:', { conflictId, resolution });
       const conflict = state.conflicts.find((c) => c.id === conflictId);
 
       if (!conflict) {
-        console.error('Conflict not found:', conflictId);
         return state;
       }
-
-      console.log('Found conflict:', conflict);
 
       let newState = { ...state };
 
       if (resolution === 'local') {
-        console.log('Keeping local version - Overwriting server');
         // To overwrite the server, we need to push a new update based on our current local state
         // This effectively tells the server "My version is newer/correct"
         if (conflict.type === 'card') {
@@ -462,12 +457,10 @@ export const boardReducer = (state, action) => {
           }
         }
       } else if (resolution === 'server') {
-        console.log('Applying server version', conflict.serverVersion);
         // Apply server version
         if (conflict.type === 'card') {
           newState.cards = newState.cards.map((card) => {
             if (card.id === conflict.itemId) {
-              console.log('Replaced card with server version');
               return conflict.serverVersion;
             }
             return card;
@@ -475,7 +468,6 @@ export const boardReducer = (state, action) => {
         } else if (conflict.type === 'list') {
           newState.lists = newState.lists.map((list) => {
             if (list.id === conflict.itemId) {
-              console.log('Replaced list with server version');
               return conflict.serverVersion;
             }
             return list;
