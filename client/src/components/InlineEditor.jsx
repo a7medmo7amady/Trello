@@ -6,6 +6,7 @@ import { memo, useState, useEffect, useRef, useCallback } from 'react';
  * Inline text editing component with save/cancel functionality.
  * Used for editing list titles and other inline text.
  *
+ * 
  * @param {Object} props
  * @param {string} props.initialValue - Initial text value
  * @param {Function} props.onSave - Called with new value on save
@@ -79,9 +80,9 @@ const InlineEditor = ({
     placeholder,
     maxLength,
     className: `
-      w-full bg-slate-900/70 text-white placeholder-slate-400
-      px-2 py-1 rounded border border-cyan-500
-      focus:outline-none focus:ring-1 focus:ring-cyan-500
+      w-full bg-gray-900/70 text-white placeholder-gray-400
+      px-2 py-1 rounded border border-primary
+      focus:outline-none focus:ring-1 focus:ring-primary
       text-sm font-semibold
       ${className}
     `,

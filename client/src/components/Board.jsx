@@ -8,25 +8,11 @@ import {
   memo,
 } from 'react';
 import { useBoardState } from '../hooks/useBoardState';
-import ListColumn from './ListColoumn';
+import ListColumn from './ListColumn';
 import ConfirmDialog from './ConfirmDialog';
 
-// Lazy load heavy modal component for code splitting
 const CardDetailModal = lazy(() => import('./CardDetailModal'));
 
-/**
- * Board Component
- *
- * Main Kanban board container that renders all list columns and manages
- * drag-and-drop interactions between them. Uses context for state management
- * and implements performance optimizations for handling 500+ cards.
- *
- * Features:
- * - Drag & drop cards within and between lists (HTML5 DnD API)
- * - Add new lists
- * - Keyboard accessible
- * - Memoized callbacks to prevent unnecessary re-renders
- */
 const Board = () => {
   const {
     state,
@@ -36,7 +22,6 @@ const Board = () => {
     archiveList,
   } = useBoardState();
 
-  // Local UI state
   const [draggedCard, setDraggedCard] = useState(null);
   const [dragOverListId, setDragOverListId] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
@@ -45,35 +30,27 @@ const Board = () => {
   const [selectedCard, setSelectedCard] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState(null);
 
-  // Refs for drag calculations
   const dragGhostRef = useRef(null);
   const newListInputRef = useRef(null);
 
-  // Filter out archived lists for display
   const visibleLists = useMemo(() => {
-    return state.lists.filter((list) => !list.archived);
-  }, [state.lists]);
+    return (state?.lists || [])
+      .filter((list) => !list.archived)
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  }, [state?.lists]);
 
-  // Get cards for a specific list - memoized per list
   const getCardsForList = useCallback(
     (listId) => {
-      return state.cards.filter((card) => card.listId === listId);
+      return (state?.cards || [])
+        .filter((card) => card.listId === listId)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
     },
-    [state.cards]
+    [state?.cards]
   );
 
-  // ============================================
-  // Drag & Drop Handlers (HTML5 DnD API)
-  // ============================================
-
-  /**
-   * Called when drag starts on a card
-   * Sets up drag data and visual feedback
-   */
   const handleDragStart = useCallback((e, card, sourceListId) => {
     setDraggedCard({ ...card, sourceListId });
 
-    // Set drag data for HTML5 DnD
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData(
       'application/json',
@@ -83,20 +60,14 @@ const Board = () => {
       })
     );
 
-    // Add dragging class for visual feedback
     e.target.classList.add('opacity-50', 'rotate-2');
 
-    // Custom drag image (optional enhancement)
     if (dragGhostRef.current) {
       dragGhostRef.current.textContent = card.title;
       e.dataTransfer.setDragImage(dragGhostRef.current, 0, 0);
     }
   }, []);
 
-  /**
-   * Called when drag ends (drop or cancel)
-   * Cleans up drag state
-   */
   const handleDragEnd = useCallback((e) => {
     e.target.classList.remove('opacity-50', 'rotate-2');
     setDraggedCard(null);
@@ -104,10 +75,6 @@ const Board = () => {
     setDragOverIndex(null);
   }, []);
 
-  /**
-   * Called when dragging over a valid drop target
-   * Calculates drop position based on mouse position
-   */
   const handleDragOver = useCallback((e, listId, cardIndex = null) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
@@ -119,21 +86,13 @@ const Board = () => {
     }
   }, []);
 
-  /**
-   * Called when leaving a drop target
-   */
   const handleDragLeave = useCallback((e) => {
-    // Only clear if leaving the list entirely
     if (!e.currentTarget.contains(e.relatedTarget)) {
       setDragOverListId(null);
       setDragOverIndex(null);
     }
   }, []);
 
-  /**
-   * Called when card is dropped on a target
-   * Handles both reordering within a list and moving between lists
-   */
   const handleDrop = useCallback(
     (e, targetListId, targetIndex = null) => {
       e.preventDefault();
@@ -142,23 +101,19 @@ const Board = () => {
 
       const { id: cardId, sourceListId } = draggedCard;
 
-      // Calculate final index
       const targetCards = getCardsForList(targetListId);
       const finalIndex =
         targetIndex !== null ? targetIndex : targetCards.length;
 
       if (sourceListId === targetListId) {
-        // Reordering within the same list
         const currentIndex = targetCards.findIndex((c) => c.id === cardId);
         if (currentIndex !== finalIndex && currentIndex !== finalIndex - 1) {
           reorderCard(cardId, targetListId, finalIndex);
         }
       } else {
-        // Moving to a different list
         moveCard(cardId, sourceListId, targetListId, finalIndex);
       }
 
-      // Clean up drag state
       setDraggedCard(null);
       setDragOverListId(null);
       setDragOverIndex(null);
@@ -166,24 +121,13 @@ const Board = () => {
     [draggedCard, getCardsForList, moveCard, reorderCard]
   );
 
-  // ============================================
-  // List Management Handlers
-  // ============================================
-
-  /**
-   * Initiates adding a new list
-   */
   const handleStartAddList = useCallback(() => {
     setIsAddingList(true);
-    // Focus input after render
     setTimeout(() => {
       newListInputRef.current?.focus();
     }, 0);
   }, []);
 
-  /**
-   * Confirms adding a new list
-   */
   const handleConfirmAddList = useCallback(() => {
     const trimmedTitle = newListTitle.trim();
     if (trimmedTitle) {
@@ -193,17 +137,11 @@ const Board = () => {
     }
   }, [newListTitle, addList]);
 
-  /**
-   * Cancels adding a new list
-   */
   const handleCancelAddList = useCallback(() => {
     setNewListTitle('');
     setIsAddingList(false);
   }, []);
 
-  /**
-   * Handles keyboard events for new list input
-   */
   const handleNewListKeyDown = useCallback(
     (e) => {
       if (e.key === 'Enter') {
@@ -216,9 +154,6 @@ const Board = () => {
     [handleConfirmAddList, handleCancelAddList]
   );
 
-  /**
-   * Shows confirmation dialog before archiving a list
-   */
   const handleArchiveList = useCallback((listId, listTitle) => {
     setConfirmDialog({
       title: 'Archive List',
@@ -231,27 +166,13 @@ const Board = () => {
     });
   }, [archiveList]);
 
-  // ============================================
-  // Card Detail Modal Handlers
-  // ============================================
-
-  /**
-   * Opens card detail modal
-   */
   const handleCardClick = useCallback((card) => {
     setSelectedCard(card);
   }, []);
 
-  /**
-   * Closes card detail modal
-   */
   const handleCloseModal = useCallback(() => {
     setSelectedCard(null);
   }, []);
-
-  // ============================================
-  // Render
-  // ============================================
 
   return (
     <div
@@ -259,14 +180,12 @@ const Board = () => {
       role="region"
       aria-label="Kanban board"
     >
-      {/* Hidden drag ghost element for custom drag image */}
       <div
         ref={dragGhostRef}
-        className="fixed -left-[9999px] bg-slate-800 text-white px-3 py-2 rounded shadow-lg text-sm font-medium max-w-[200px] truncate"
+        className="fixed -left-[9999px] bg-gray-800 text-white px-3 py-2 rounded shadow-lg text-sm font-medium max-w-[200px] truncate"
         aria-hidden="true"
       />
 
-      {/* List Columns */}
       {visibleLists.map((list, index) => (
         <ListColumn
           key={list.id}
@@ -286,10 +205,9 @@ const Board = () => {
         />
       ))}
 
-      {/* Add New List */}
       <div className="flex-shrink-0 w-72">
         {isAddingList ? (
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-3 border border-slate-700/50">
+          <div className="bg-gray-800/80 backdrop-blur-sm rounded-xl p-3 border border-gray-700/50">
             <input
               ref={newListInputRef}
               type="text"
@@ -298,7 +216,7 @@ const Board = () => {
               onKeyDown={handleNewListKeyDown}
               onBlur={handleCancelAddList}
               placeholder="Enter list title..."
-              className="w-full bg-slate-900/50 text-white placeholder-slate-400 px-3 py-2 rounded-lg border border-slate-600 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none transition-colors text-sm"
+              className="w-full bg-gray-900/80 text-white placeholder-gray-400 px-3 py-2 rounded-lg border border-gray-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-colors text-sm"
               aria-label="New list title"
               maxLength={50}
             />
@@ -309,7 +227,7 @@ const Board = () => {
                   e.preventDefault();
                   handleConfirmAddList();
                 }}
-                className="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                className="flex-1 bg-primary hover:bg-primary-hover text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
               >
                 Add List
               </button>
@@ -319,7 +237,7 @@ const Board = () => {
                   e.preventDefault();
                   handleCancelAddList();
                 }}
-                className="px-3 py-1.5 text-slate-400 hover:text-white transition-colors"
+                className="px-3 py-1.5 text-gray-400 hover:text-white transition-colors"
                 aria-label="Cancel adding list"
               >
                 <svg
@@ -342,11 +260,11 @@ const Board = () => {
           <button
             type="button"
             onClick={handleStartAddList}
-            className="w-full bg-slate-800/30 hover:bg-slate-800/50 backdrop-blur-sm rounded-xl p-3 border border-slate-700/30 hover:border-slate-600/50 text-slate-400 hover:text-white transition-all flex items-center gap-2 group"
+            className="w-full bg-gray-800/40 hover:bg-gray-800/60 backdrop-blur-sm rounded-xl p-3 border border-gray-700/30 hover:border-gray-600/50 text-gray-400 hover:text-white transition-all flex items-center gap-2 group"
             aria-label="Add new list"
           >
             <svg
-              className="w-5 h-5 text-slate-500 group-hover:text-cyan-400 transition-colors"
+              className="w-5 h-5 text-gray-500 group-hover:text-primary-light transition-colors"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -363,34 +281,33 @@ const Board = () => {
         )}
       </div>
 
-      {/* Card Detail Modal - Lazy loaded */}
       {selectedCard && (
         <Suspense
           fallback={
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-slate-800 rounded-xl p-8">
-                <div className="animate-spin w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full" />
+            <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm">
+              <div className="bg-neutral-900 border border-gray-800 rounded-xl p-8 shadow-2xl" role="status" aria-label="Loading">
+                <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
               </div>
             </div>
           }
         >
           <CardDetailModal card={selectedCard} onClose={handleCloseModal} />
         </Suspense>
-      )}
+      )
+      }
 
-      {/* Confirm Dialog */}
-      {confirmDialog && (
-        <ConfirmDialog
-          title={confirmDialog.title}
-          message={confirmDialog.message}
-          onConfirm={confirmDialog.onConfirm}
-          onCancel={confirmDialog.onCancel}
-        />
-      )}
-    </div>
+      {
+        confirmDialog && (
+          <ConfirmDialog
+            title={confirmDialog.title}
+            message={confirmDialog.message}
+            onConfirm={confirmDialog.onConfirm}
+            onCancel={confirmDialog.onCancel}
+          />
+        )
+      }
+    </div >
   );
 };
 
-// Memoize the entire Board component to prevent unnecessary re-renders
-// from parent components (App) that don't affect the board
 export default memo(Board);

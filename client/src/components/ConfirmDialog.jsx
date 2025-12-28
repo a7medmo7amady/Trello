@@ -38,7 +38,7 @@ const ConfirmDialog = ({
         return {
           icon: (
             <svg
-              className="w-6 h-6 text-red-400"
+              className="w-6 h-6 text-red-500"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -51,14 +51,14 @@ const ConfirmDialog = ({
               />
             </svg>
           ),
-          confirmButton: 'bg-red-600 hover:bg-red-500 focus:ring-red-500',
-          iconBg: 'bg-red-500/10',
+          confirmButton: 'bg-primary hover:bg-primary-hover focus:ring-primary',
+          iconBg: 'bg-red-900/20',
         };
       case 'warning':
         return {
           icon: (
             <svg
-              className="w-6 h-6 text-amber-400"
+              className="w-6 h-6 text-amber-500"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -79,7 +79,7 @@ const ConfirmDialog = ({
         return {
           icon: (
             <svg
-              className="w-6 h-6 text-cyan-400"
+              className="w-6 h-6 text-primary-light"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -92,8 +92,8 @@ const ConfirmDialog = ({
               />
             </svg>
           ),
-          confirmButton: 'bg-cyan-600 hover:bg-cyan-500 focus:ring-cyan-500',
-          iconBg: 'bg-cyan-500/10',
+          confirmButton: 'bg-primary hover:bg-primary-hover focus:ring-primary',
+          iconBg: 'bg-primary/20',
         };
     }
   }, [variant]);
@@ -179,7 +179,7 @@ const ConfirmDialog = ({
     >
       <div
         ref={dialogRef}
-        className="w-full max-w-md bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200"
+        className="w-full max-w-md bg-neutral-900 border border-gray-800 rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200"
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="dialog-title"
@@ -199,7 +199,7 @@ const ConfirmDialog = ({
             </h2>
             <p
               id="dialog-description"
-              className="mt-2 text-sm text-slate-400"
+              className="mt-2 text-sm text-gray-400"
             >
               {message}
             </p>
@@ -207,12 +207,12 @@ const ConfirmDialog = ({
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-3 p-4 pt-2 border-t border-slate-700/50">
+        <div className="flex justify-end gap-3 p-4 pt-2 border-t border-gray-800/50">
           <button
             ref={cancelButtonRef}
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-slate-800"
+            className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-900"
           >
             {cancelText}
           </button>
@@ -220,7 +220,7 @@ const ConfirmDialog = ({
             ref={confirmButtonRef}
             type="button"
             onClick={onConfirm}
-            className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 ${styles.confirmButton}`}
+            className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 ${styles.confirmButton}`}
           >
             {confirmText}
           </button>

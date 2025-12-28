@@ -1,17 +1,22 @@
-import { useState } from 'react'
-// import reactLogo from './assets/react.svg'
-// import viteLogo from '/vite.svg'
-import './App.css'
-import Board from './components/Board.jsx'
+import { BoardProvider } from './context/BoardProvider';
+import Header from './components/Header';
+import Toolbar from './components/Toolbar';
+import Board from './components/Board';
+import './styles/global.css';
+import './styles/components.css';
 
 function App() {
-  const [count, setCount] = useState(0)
-
-      return (
-        <div className="App">
+  return (
+    <BoardProvider>
+      <div className="App min-h-screen bg-gradient-to-br from-neutral-950 via-neutral-900 to-red-950/20 flex flex-col">
+        <Header />
+        <Toolbar />
+        <main className="flex-1 flex overflow-hidden">
           <Board />
-        </div>
-  )
+        </main>
+      </div>
+    </BoardProvider>
+  );
 }
 
-export default App
+export default App;

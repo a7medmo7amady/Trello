@@ -22,7 +22,7 @@ const Card = ({
   onDragEnd,
   onClick,
 }) => {
-  
+
   const handleDragStart = useCallback(
     (e) => {
       onDragStart(e, card, listId);
@@ -49,21 +49,22 @@ const Card = ({
   // ==========================================
 
   const getTagColor = (tag) => {
-    // Generate consistent color from tag string
-    const colors = [
-      'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
-      'bg-purple-500/20 text-purple-300 border-purple-500/30',
-      'bg-green-500/20 text-green-300 border-green-500/30',
-      'bg-amber-500/20 text-amber-300 border-amber-500/30',
-      'bg-pink-500/20 text-pink-300 border-pink-500/30',
-      'bg-blue-500/20 text-blue-300 border-blue-500/30',
-      'bg-red-500/20 text-red-300 border-red-500/30',
-    ];
-
+    // Determine hash for consistency
     let hash = 0;
     for (let i = 0; i < tag.length; i++) {
       hash = tag.charCodeAt(i) + ((hash << 5) - hash);
     }
+
+    // Monochrome / Red-Accent Tag Palette for Dark Theme
+    // All tags should look good on a black background
+    const colors = [
+      'bg-red-900/30 text-red-200 border-red-800/50',
+      'bg-neutral-800 text-neutral-300 border-neutral-700',
+      'bg-stone-900 text-stone-300 border-stone-800',
+      'bg-red-950 text-red-300 border-red-900',
+      'bg-neutral-900 text-gray-300 border-gray-800',
+    ];
+
     return colors[Math.abs(hash) % colors.length];
   };
 
@@ -83,11 +84,11 @@ const Card = ({
       aria-label={`Card: ${card.title}. Press Enter to edit.`}
       className={`
         card group cursor-pointer select-none
-        bg-slate-900/60 hover:bg-slate-900/80
-        border border-slate-700/50 hover:border-slate-600
+        bg-gray-900/60 hover:bg-gray-900/80
+        border border-gray-700/50 hover:border-gray-600
         rounded-lg p-3 shadow-sm hover:shadow-md
         transition-all duration-150
-        focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-slate-800
+        focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-gray-900
         ${isDragging ? 'opacity-50 rotate-2 scale-105 shadow-xl' : ''}
       `}
     >
@@ -103,7 +104,7 @@ const Card = ({
             </span>
           ))}
           {card.tags.length > 3 && (
-            <span className="px-2 py-0.5 text-xs font-medium text-slate-400">
+            <span className="px-2 py-0.5 text-xs font-medium text-gray-400">
               +{card.tags.length - 3}
             </span>
           )}
@@ -117,16 +118,16 @@ const Card = ({
 
       {/* Description preview */}
       {card.description && (
-        <p className="mt-1.5 text-xs text-slate-400 line-clamp-2">
+        <p className="mt-1.5 text-xs text-gray-400 line-clamp-2">
           {card.description}
         </p>
       )}
 
       {/* Footer with metadata */}
-      <div className="flex items-center justify-between mt-3 pt-2 border-t border-slate-700/30">
+      <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-700/30">
         {/* Description indicator */}
         {card.description && (
-          <div className="flex items-center text-slate-500" title="Has description">
+          <div className="flex items-center text-gray-500" title="Has description">
             <svg
               className="w-4 h-4"
               fill="none"
@@ -146,7 +147,7 @@ const Card = ({
         {/* Drag handle indicator */}
         <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
           <svg
-            className="w-4 h-4 text-slate-500"
+            className="w-4 h-4 text-gray-500"
             fill="currentColor"
             viewBox="0 0 20 20"
           >
