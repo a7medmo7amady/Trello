@@ -32,15 +32,12 @@ const simulateLatency = async () => {
 };
 
 export const initializeServerState = async (state) => {
-  const currentDB = await getDB();
-  // Only initialize if DB is empty to avoid overwriting persistent data on reload
-  if (currentDB.lists.length === 0 && currentDB.cards.length === 0) {
-    saveDB({
-      lists: JSON.parse(JSON.stringify(state.lists || [])),
-      cards: JSON.parse(JSON.stringify(state.cards || [])),
-      lastModified: Date.now(),
-    });
-  }
+  // Always update server with local state
+  saveDB({
+    lists: JSON.parse(JSON.stringify(state.lists || [])),
+    cards: JSON.parse(JSON.stringify(state.cards || [])),
+    lastModified: Date.now(),
+  });
 };
 
 export const getServerState = async () => {

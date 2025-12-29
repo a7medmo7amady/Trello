@@ -32,25 +32,15 @@ export const useOfflineSync = () => {
     return () => { isMountedRef.current = false; };
   }, [state?.syncQueue]);
 
-  // Initial Load from Server
+  // Initial sync - just push local to server, don't overwrite local
   useEffect(() => {
     const init = async () => {
-      // Initialize mocks if empty
-      if (stateRef.current?.lists && stateRef.current?.cards) {
-        await api.initializeServerState({ lists: stateRef.current.lists, cards: stateRef.current.cards });
-      }
-
-      // Fetch initial server state
       try {
-        const serverState = await api.getServerState();
-        if (serverState && isMountedRef.current) {
-          dispatch({
-            type: ACTIONS.APPLY_SERVER_STATE,
-            payload: {
-              lists: serverState.lists,
-              cards: serverState.cards,
-              lastSyncedAt: new Date().toISOString(),
-            },
+        // Push local state to server (server will merge/update)
+        if (stateRef.current?.lists?.length > 0 || stateRef.current?.cards?.length > 0) {
+          await api.initializeServerState({
+            lists: stateRef.current.lists,
+            cards: stateRef.current.cards
           });
         }
       } catch (err) {
@@ -60,107 +50,130 @@ export const useOfflineSync = () => {
     init();
   }, []);
 
+  // Manual sync - compare local vs server
+  const [foundConflicts, setFoundConflicts] = useState([]);
+
   const processSync = useCallback(async () => {
     if (isSyncing || !navigator.onLine) return;
 
     setIsSyncing(true);
     setLastSyncError(null);
-
-    // Capture latest state reference
-    const currentState = stateRef.current;
+    setFoundConflicts([]);
 
     try {
-      // 1. Push Local Changes
-      if (currentState?.syncQueue?.length > 0) {
-        const queueToProcess = [...currentState.syncQueue];
-        const result = await api.syncChanges(queueToProcess);
+      const localState = stateRef.current;
 
-        // Remove processed items
-        if (result && result.results) {
-          const successfulIds = result.results
-            .filter((r) => r.success)
-            .map((r) => r.changeId);
-
-          for (const id of successfulIds) {
-            dispatch({ type: ACTIONS.REMOVE_FROM_QUEUE, payload: { queueId: id } });
-          }
-        }
+      // Get server state
+      const serverState = await api.getServerState();
+      if (!serverState || !serverState.cards || serverState.cards.length === 0) {
+        // No server data - push local to server
+        await api.initializeServerState({
+          lists: localState.lists,
+          cards: localState.cards
+        });
+        dispatch({ type: ACTIONS.MARK_SYNCED });
+        setIsSyncing(false);
+        return { success: true, conflicts: [] };
       }
 
-      // 2. Pull Server State & Check Conflicts
-      const serverState = await api.getServerState();
-      if (!serverState) return;
-
-      // refresh current state again in case changes happened while awaiting above
-      const freshState = stateRef.current;
+      // Compare local vs server - find conflicts
       const conflicts = [];
 
-      // Check Lists
-      for (const serverList of serverState.lists) {
-        const localList = freshState.lists.find(l => l.id === serverList.id);
-        if (localList) {
-          const conflict = api.checkForConflicts(localList, serverList);
-          if (conflict) conflicts.push(conflict);
-        }
-      }
-      // Check Cards
-      for (const serverCard of serverState.cards) {
-        const localCard = freshState.cards.find(c => c.id === serverCard.id);
-        if (localCard) {
-          const conflict = api.checkForConflicts(localCard, serverCard);
-          if (conflict) conflicts.push(conflict);
-        }
-      }
+      for (const localCard of localState.cards) {
+        const serverCard = serverState.cards.find(c => c.id === localCard.id);
+        if (serverCard) {
+          const isDifferent =
+            localCard.title !== serverCard.title ||
+            localCard.description !== serverCard.description ||
+            localCard.listId !== serverCard.listId ||
+            JSON.stringify(localCard.tags) !== JSON.stringify(serverCard.tags);
 
-      // Dispatch conflicts if any
-      for (const conflict of conflicts) {
-        // Check if we already have this conflict to avoid potential dupes
-        const exists = freshState.conflicts.find(c => c.itemId === conflict.itemId);
-        if (!exists) {
-          dispatch({ type: ACTIONS.MERGE_CONFLICT, payload: { conflict } });
-        }
-      }
-
-      // If no conflicts, auto-update local state to match server (convergence)
-      // This is crucial for "Use Server" to stick, and for general sync
-      if (conflicts.length === 0) {
-        dispatch({
-          type: ACTIONS.APPLY_SERVER_STATE,
-          payload: {
-            lists: serverState.lists,
-            cards: serverState.cards,
-            lastSyncedAt: new Date().toISOString(),
+          if (isDifferent) {
+            conflicts.push({
+              id: localCard.id,
+              type: 'card',
+              local: localCard,
+              server: serverCard,
+            });
           }
-        });
+        }
       }
 
+      for (const localList of localState.lists) {
+        const serverList = serverState.lists.find(l => l.id === localList.id);
+        if (serverList) {
+          if (localList.title !== serverList.title) {
+            conflicts.push({
+              id: localList.id,
+              type: 'list',
+              local: localList,
+              server: serverList,
+            });
+          }
+        }
+      }
+
+      if (conflicts.length > 0) {
+        setFoundConflicts(conflicts);
+        setIsSyncing(false);
+        return { success: false, conflicts };
+      }
+
+      // No conflicts - push local to server
+      await api.initializeServerState({
+        lists: localState.lists,
+        cards: localState.cards
+      });
+
+      dispatch({ type: ACTIONS.CLEAR_QUEUE });
       dispatch({ type: ACTIONS.MARK_SYNCED });
+      setIsSyncing(false);
+      return { success: true, conflicts: [] };
 
     } catch (e) {
       setLastSyncError(e.message);
-    } finally {
-      if (isMountedRef.current) setIsSyncing(false);
+      setIsSyncing(false);
+      return { success: false, error: e.message };
     }
   }, [dispatch, isSyncing]);
+
+  const resolveConflict = useCallback((conflictId, choice) => {
+    const conflict = foundConflicts.find(c => c.id === conflictId);
+    if (!conflict) return;
+
+    if (choice === 'local') {
+      // Keep local - will push to server on next sync
+    } else {
+      // Use server - apply server version to local
+      if (conflict.type === 'card') {
+        dispatch({
+          type: ACTIONS.UPDATE_CARD,
+          payload: { cardId: conflict.id, updates: conflict.server }
+        });
+      } else {
+        dispatch({
+          type: ACTIONS.RENAME_LIST,
+          payload: { listId: conflict.id, title: conflict.server.title }
+        });
+      }
+    }
+
+    setFoundConflicts(prev => prev.filter(c => c.id !== conflictId));
+  }, [foundConflicts, dispatch]);
 
   const forceSync = useCallback(async () => {
     return processSync();
   }, [processSync]);
 
-  // Interval Sync
-  useEffect(() => {
-    syncIntervalRef.current = setInterval(() => {
-      processSync();
-    }, SYNC_INTERVAL);
-    return () => clearInterval(syncIntervalRef.current);
-  }, [processSync]);
+  // NO auto sync - user clicks manually
 
   return {
     isSyncing,
     isOnline: navigator.onLine,
     lastSyncError,
     pendingChanges,
-    conflicts: state?.conflicts || [],
+    foundConflicts,
+    resolveConflict,
     forceSync
   };
 };

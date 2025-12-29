@@ -457,7 +457,7 @@ export const boardReducer = (state, action) => {
           }
         }
       } else if (resolution === 'server') {
-        // Apply server version
+        // Apply server version and CLEAR any pending changes for this item
         if (conflict.type === 'card') {
           newState.cards = newState.cards.map((card) => {
             if (card.id === conflict.itemId) {
@@ -465,12 +465,29 @@ export const boardReducer = (state, action) => {
             }
             return card;
           });
+          // Remove any pending changes for this card from sync queue
+          newState.syncQueue = state.syncQueue.filter((item) => {
+            if (item.type === 'UPDATE_CARD' || item.type === 'DELETE_CARD') {
+              return item.data?.id !== conflict.itemId;
+            }
+            if (item.type === 'MOVE_CARD') {
+              return item.data?.cardId !== conflict.itemId;
+            }
+            return true;
+          });
         } else if (conflict.type === 'list') {
           newState.lists = newState.lists.map((list) => {
             if (list.id === conflict.itemId) {
               return conflict.serverVersion;
             }
             return list;
+          });
+          // Remove any pending changes for this list from sync queue
+          newState.syncQueue = state.syncQueue.filter((item) => {
+            if (item.type === 'UPDATE_LIST' || item.type === 'ARCHIVE_LIST' || item.type === 'RESTORE_LIST') {
+              return item.data?.id !== conflict.itemId;
+            }
+            return true;
           });
         }
       }

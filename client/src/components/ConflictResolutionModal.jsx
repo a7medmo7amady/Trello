@@ -10,8 +10,25 @@ const ConflictResolutionModal = ({
     conflict,
     onResolve,
 }) => {
-    // Default to empty objects if versions are missing to prevent crashes
-    const { localVersion = {}, serverVersion = {}, type } = conflict || {};
+    // Guard against invalid conflict data
+    if (!conflict || !conflict.localVersion || !conflict.serverVersion) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                <div className="bg-neutral-900 border border-red-900/30 rounded-2xl p-6 text-white text-center">
+                    <p className="mb-2">Conflict data incomplete</p>
+                    <p className="text-gray-400 text-sm mb-4">Local or server version missing</p>
+                    <button
+                        onClick={() => onResolve('server')}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg"
+                    >
+                        Dismiss & Use Server
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    const { localVersion, serverVersion, type } = conflict;
 
     const DiffField = ({ label, local, server }) => {
         const isDifferent = JSON.stringify(local) !== JSON.stringify(server);
@@ -101,8 +118,8 @@ const ConflictResolutionModal = ({
 
                         <DiffField
                             label="Last Modified"
-                            local={new Date(localVersion?.lastModifiedAt).toLocaleString()}
-                            server={new Date(serverVersion?.lastModifiedAt).toLocaleString()}
+                            local={localVersion?.lastModifiedAt ? new Date(localVersion.lastModifiedAt).toLocaleString() : 'Unknown'}
+                            server={serverVersion?.lastModifiedAt ? new Date(serverVersion.lastModifiedAt).toLocaleString() : 'Unknown'}
                         />
                     </div>
                 </div>
