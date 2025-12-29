@@ -849,9 +849,9 @@ const ListColumn = ({
       ref={listRef}
       className={`
         list-column flex-shrink-0 w-72 flex flex-col max-h-full
-        bg-slate-800/60 backdrop-blur-sm rounded-xl
+        bg-gray-800/60 backdrop-blur-sm rounded-xl
         border transition-all duration-200
-        ${isDragOver ? 'border-cyan-500/50 bg-slate-800/80' : 'border-slate-700/50'}
+        ${isDragOver ? 'border-primary/50 bg-gray-800/80' : 'border-gray-700/50'}
       `}
       onDragOver={handleListDragOver}
       onDragLeave={onDragLeave}
@@ -859,7 +859,7 @@ const ListColumn = ({
       role="region"
       aria-label={`${list.title} list with ${sortedCards.length} cards`}
     &gt;
-      &lt;div className="flex items-center justify-between p-3 border-b border-slate-700/50"&gt;
+      &lt;div className="flex items-center justify-between p-3 border-b border-gray-700/50"&gt;
         {<span class="branch-0 cbranch-no" title="branch not covered" >isEditingTitle ? (</span>
 <span class="cstat-no" title="statement not covered" >          &lt;InlineEditor</span>
 <span class="cstat-no" title="statement not covered" >            initialValue={list.title}</span>
@@ -872,14 +872,14 @@ const ListColumn = ({
           &lt;button
             type="button"
             onClick={<span class="fstat-no" title="function not covered" >() =&gt; setIsEditingTitle(true)}</span>
-            className="flex-1 text-left font-semibold text-white hover:text-cyan-400 transition-colors truncate"
+            className="flex-1 text-left font-semibold text-white hover:text-red-400 transition-colors truncate"
             aria-label={`Edit ${list.title} title`}
           &gt;
             {list.title}
           &lt;/button&gt;
         )}
 &nbsp;
-        &lt;span className="mx-2 px-2 py-0.5 text-xs font-medium text-slate-400 bg-slate-700/50 rounded-full"&gt;
+        &lt;span className="mx-2 px-2 py-0.5 text-xs font-medium text-gray-400 bg-gray-700/50 rounded-full"&gt;
           {sortedCards.length}
         &lt;/span&gt;
 &nbsp;
@@ -887,7 +887,7 @@ const ListColumn = ({
           &lt;button
             type="button"
             onClick={handleToggleMenu}
-            className="p-1 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
+            className="p-1 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
             aria-label="List options"
             aria-expanded={showMenu}
           &gt;
@@ -912,7 +912,7 @@ const ListColumn = ({
               /&gt;
               &lt;div
                 ref={menuRef}
-                className="absolute right-0 top-full mt-1 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-20 py-1"
+                className="absolute right-0 top-full mt-1 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-20 py-1"
                 role="menu"
               &gt;
                 &lt;button
@@ -921,7 +921,7 @@ const ListColumn = ({
 <span class="cstat-no" title="statement not covered" >                    setIsEditingTitle(true);</span>
 <span class="cstat-no" title="statement not covered" >                    setShowMenu(false);</span>
 <span class="cstat-no" title="statement not covered" >                  }}</span>
-                  className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                  className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
                   role="menuitem"
                 &gt;
                   Rename list
@@ -929,7 +929,7 @@ const ListColumn = ({
                 &lt;button
                   type="button"
                   onClick={handleArchive}
-                  className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-slate-700 hover:text-red-300 transition-colors"
+                  className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 hover:text-red-300 transition-colors"
                   role="menuitem"
                 &gt;
                   Archive list
@@ -953,7 +953,7 @@ const ListColumn = ({
             onDrop={<span class="fstat-no" title="function not covered" >(e) =&gt; handleCardDrop(e, cardIndex)}</span>
           &gt;
             {isDragOver &amp;&amp; dragOverIndex === <span class="branch-0 cbranch-no" title="branch not covered" >cardIndex &amp;&amp; draggedCardId !== card.<span class="branch-0 cbranch-no" title="branch not covered" >id &amp;&amp; (</span></span>
-<span class="cstat-no" title="statement not covered" >              &lt;div className="h-1 bg-cyan-500 rounded-full mb-2 animate-pulse" /&gt;</span>
+<span class="cstat-no" title="statement not covered" >              &lt;div className="h-1 bg-primary rounded-full mb-2 animate-pulse" /&gt;</span>
             )}
             &lt;Card
               card={card}
@@ -967,17 +967,17 @@ const ListColumn = ({
         ))}
 &nbsp;
         {isDragOver &amp;&amp; dragOverIndex === sortedCards.<span class="branch-0 cbranch-no" title="branch not covered" >length &amp;&amp; (</span>
-<span class="cstat-no" title="statement not covered" >          &lt;div className="h-1 bg-cyan-500 rounded-full animate-pulse" /&gt;</span>
+<span class="cstat-no" title="statement not covered" >          &lt;div className="h-1 bg-primary rounded-full animate-pulse" /&gt;</span>
         )}
 &nbsp;
         {sortedCards.length === 0 &amp;&amp; !isDragOver &amp;&amp; (
-          &lt;div className="text-center py-8 text-slate-500 text-sm"&gt;
+          &lt;div className="text-center py-8 text-gray-500 text-sm"&gt;
             No cards yet
           &lt;/div&gt;
         )}
       &lt;/div&gt;
 &nbsp;
-      &lt;div className="p-2 border-t border-slate-700/50"&gt;
+      &lt;div className="p-2 border-t border-gray-700/50"&gt;
         {isAddingCard ? (
           &lt;div className="space-y-2"&gt;
             &lt;textarea
@@ -986,7 +986,7 @@ const ListColumn = ({
               onChange={<span class="fstat-no" title="function not covered" >(e) =&gt; setNewCardTitle(e.target.value)}</span>
               onKeyDown={handleNewCardKeyDown}
               placeholder="Enter card title..."
-              className="w-full bg-slate-900/50 text-white placeholder-slate-400 px-3 py-2 rounded-lg border border-slate-600 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 outline-none transition-colors text-sm resize-none"
+              className="w-full bg-gray-900/50 text-white placeholder-gray-400 px-3 py-2 rounded-lg border border-gray-600 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-colors text-sm resize-none"
               rows={2}
               aria-label="New card title"
               maxLength={200}
@@ -995,14 +995,14 @@ const ListColumn = ({
               &lt;button
                 type="button"
                 onClick={handleConfirmAddCard}
-                className="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                className="flex-1 bg-primary hover:bg-primary-hover text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
               &gt;
                 Add Card
               &lt;/button&gt;
               &lt;button
                 type="button"
                 onClick={handleCancelAddCard}
-                className="px-3 py-1.5 text-slate-400 hover:text-white transition-colors"
+                className="px-3 py-1.5 text-gray-400 hover:text-white transition-colors"
                 aria-label="Cancel adding card"
               &gt;
                 &lt;svg
@@ -1025,11 +1025,11 @@ const ListColumn = ({
           &lt;button
             type="button"
             onClick={handleStartAddCard}
-            className="w-full text-left px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors flex items-center gap-2 group"
+            className="w-full text-left px-3 py-2 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors flex items-center gap-2 group"
             aria-label={`Add card to ${list.title}`}
           &gt;
             &lt;svg
-              className="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-colors"
+              className="w-4 h-4 text-gray-500 group-hover:text-red-400 transition-colors"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -1057,7 +1057,7 @@ export default memo(ListColumn);
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-12-28T18:42:37.391Z
+                at 2025-12-29T07:38:12.021Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

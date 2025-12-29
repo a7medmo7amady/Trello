@@ -567,7 +567,7 @@ const ConfirmDialog = <span class="fstat-no" title="function not covered" >({</s
 <span class="cstat-no" title="statement not covered" >        return {</span>
 <span class="cstat-no" title="statement not covered" >          icon: (</span>
 <span class="cstat-no" title="statement not covered" >            &lt;svg</span>
-<span class="cstat-no" title="statement not covered" >              className="w-6 h-6 text-red-400"</span>
+<span class="cstat-no" title="statement not covered" >              className="w-6 h-6 text-red-500"</span>
 <span class="cstat-no" title="statement not covered" >              fill="none"</span>
 <span class="cstat-no" title="statement not covered" >              stroke="currentColor"</span>
 <span class="cstat-no" title="statement not covered" >              viewBox="0 0 24 24"</span>
@@ -580,14 +580,14 @@ const ConfirmDialog = <span class="fstat-no" title="function not covered" >({</s
 <span class="cstat-no" title="statement not covered" >              /&gt;</span>
 <span class="cstat-no" title="statement not covered" >            &lt;/svg&gt;</span>
           ),
-<span class="cstat-no" title="statement not covered" >          confirmButton: 'bg-red-600 hover:bg-red-500 focus:ring-red-500',</span>
-<span class="cstat-no" title="statement not covered" >          iconBg: 'bg-red-500/10',</span>
+<span class="cstat-no" title="statement not covered" >          confirmButton: 'bg-primary hover:bg-primary-hover focus:ring-primary',</span>
+<span class="cstat-no" title="statement not covered" >          iconBg: 'bg-red-900/20',</span>
 <span class="cstat-no" title="statement not covered" >        };</span>
 <span class="cstat-no" title="statement not covered" >      case 'warning':</span>
 <span class="cstat-no" title="statement not covered" >        return {</span>
 <span class="cstat-no" title="statement not covered" >          icon: (</span>
 <span class="cstat-no" title="statement not covered" >            &lt;svg</span>
-<span class="cstat-no" title="statement not covered" >              className="w-6 h-6 text-amber-400"</span>
+<span class="cstat-no" title="statement not covered" >              className="w-6 h-6 text-amber-500"</span>
 <span class="cstat-no" title="statement not covered" >              fill="none"</span>
 <span class="cstat-no" title="statement not covered" >              stroke="currentColor"</span>
 <span class="cstat-no" title="statement not covered" >              viewBox="0 0 24 24"</span>
@@ -608,7 +608,7 @@ const ConfirmDialog = <span class="fstat-no" title="function not covered" >({</s
 <span class="cstat-no" title="statement not covered" >        return {</span>
 <span class="cstat-no" title="statement not covered" >          icon: (</span>
 <span class="cstat-no" title="statement not covered" >            &lt;svg</span>
-<span class="cstat-no" title="statement not covered" >              className="w-6 h-6 text-cyan-400"</span>
+<span class="cstat-no" title="statement not covered" >              className="w-6 h-6 text-primary-light"</span>
 <span class="cstat-no" title="statement not covered" >              fill="none"</span>
 <span class="cstat-no" title="statement not covered" >              stroke="currentColor"</span>
 <span class="cstat-no" title="statement not covered" >              viewBox="0 0 24 24"</span>
@@ -621,8 +621,8 @@ const ConfirmDialog = <span class="fstat-no" title="function not covered" >({</s
 <span class="cstat-no" title="statement not covered" >              /&gt;</span>
 <span class="cstat-no" title="statement not covered" >            &lt;/svg&gt;</span>
           ),
-<span class="cstat-no" title="statement not covered" >          confirmButton: 'bg-cyan-600 hover:bg-cyan-500 focus:ring-cyan-500',</span>
-<span class="cstat-no" title="statement not covered" >          iconBg: 'bg-cyan-500/10',</span>
+<span class="cstat-no" title="statement not covered" >          confirmButton: 'bg-primary hover:bg-primary-hover focus:ring-primary',</span>
+<span class="cstat-no" title="statement not covered" >          iconBg: 'bg-primary/20',</span>
 <span class="cstat-no" title="statement not covered" >        };</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }, [variant]);</span>
@@ -708,7 +708,7 @@ const ConfirmDialog = <span class="fstat-no" title="function not covered" >({</s
     &gt;
 <span class="cstat-no" title="statement not covered" >      &lt;div</span>
 <span class="cstat-no" title="statement not covered" >        ref={dialogRef}</span>
-<span class="cstat-no" title="statement not covered" >        className="w-full max-w-md bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200"</span>
+<span class="cstat-no" title="statement not covered" >        className="w-full max-w-md bg-neutral-900 border border-gray-800 rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200"</span>
 <span class="cstat-no" title="statement not covered" >        role="alertdialog"</span>
 <span class="cstat-no" title="statement not covered" >        aria-modal="true"</span>
 <span class="cstat-no" title="statement not covered" >        aria-labelledby="dialog-title"</span>
@@ -728,7 +728,7 @@ const ConfirmDialog = <span class="fstat-no" title="function not covered" >({</s
 <span class="cstat-no" title="statement not covered" >            &lt;/h2&gt;</span>
 <span class="cstat-no" title="statement not covered" >            &lt;p</span>
 <span class="cstat-no" title="statement not covered" >              id="dialog-description"</span>
-<span class="cstat-no" title="statement not covered" >              className="mt-2 text-sm text-slate-400"</span>
+<span class="cstat-no" title="statement not covered" >              className="mt-2 text-sm text-gray-400"</span>
             &gt;
 <span class="cstat-no" title="statement not covered" >              {message}</span>
 <span class="cstat-no" title="statement not covered" >            &lt;/p&gt;</span>
@@ -736,12 +736,12 @@ const ConfirmDialog = <span class="fstat-no" title="function not covered" >({</s
 <span class="cstat-no" title="statement not covered" >        &lt;/div&gt;</span>
 &nbsp;
         {/* Actions */}
-<span class="cstat-no" title="statement not covered" >        &lt;div className="flex justify-end gap-3 p-4 pt-2 border-t border-slate-700/50"&gt;</span>
+<span class="cstat-no" title="statement not covered" >        &lt;div className="flex justify-end gap-3 p-4 pt-2 border-t border-gray-800/50"&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;button</span>
 <span class="cstat-no" title="statement not covered" >            ref={cancelButtonRef}</span>
 <span class="cstat-no" title="statement not covered" >            type="button"</span>
 <span class="cstat-no" title="statement not covered" >            onClick={onCancel}</span>
-<span class="cstat-no" title="statement not covered" >            className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-slate-800"</span>
+<span class="cstat-no" title="statement not covered" >            className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-900"</span>
           &gt;
 <span class="cstat-no" title="statement not covered" >            {cancelText}</span>
 <span class="cstat-no" title="statement not covered" >          &lt;/button&gt;</span>
@@ -749,7 +749,7 @@ const ConfirmDialog = <span class="fstat-no" title="function not covered" >({</s
 <span class="cstat-no" title="statement not covered" >            ref={confirmButtonRef}</span>
 <span class="cstat-no" title="statement not covered" >            type="button"</span>
 <span class="cstat-no" title="statement not covered" >            onClick={onConfirm}</span>
-<span class="cstat-no" title="statement not covered" >            className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800 ${styles.confirmButton}`}</span>
+<span class="cstat-no" title="statement not covered" >            className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 ${styles.confirmButton}`}</span>
           &gt;
 <span class="cstat-no" title="statement not covered" >            {confirmText}</span>
 <span class="cstat-no" title="statement not covered" >          &lt;/button&gt;</span>
@@ -766,7 +766,7 @@ export default memo(ConfirmDialog);</pre></td></tr></table></pre>
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-12-28T18:42:37.391Z
+                at 2025-12-29T07:38:12.021Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

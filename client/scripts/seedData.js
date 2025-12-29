@@ -1,8 +1,4 @@
-/**
- * Seed Data Script
- * Generates 500+ cards for performance testing
- * Run with: node scripts/seedData.js
- */
+
 
 import { v4 as uuidv4 } from 'uuid';
 import { writeFileSync } from 'fs';
@@ -17,7 +13,7 @@ const generateSeedData = (numCards = 500) => {
   ];
 
   const tags = ['feature', 'bug', 'enhancement', 'documentation', 'testing', 'urgent', 'low-priority', 'refactor', 'design', 'backend'];
-  const adjectives = ['Important', 'Critical', 'Minor', 'Major', 'Quick', 'Complex', 'Simple', 'Urgent', 'Optional', 'Required'];
+  const adjectives = ['Important', 'Critical', 'Minor', 'Major', 'Complex', 'Simple','Optional','Required'];
   const nouns = ['Task', 'Feature', 'Bug', 'Update', 'Fix', 'Enhancement', 'Issue', 'Story', 'Epic', 'Spike'];
   const descriptions = [
     'This task requires immediate attention and should be prioritized.',

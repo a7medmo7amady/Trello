@@ -109,7 +109,7 @@ describe('ListColumn', () => {
   it('should apply drag over styles when isDragOver is true', () => {
     renderWithProvider({ isDragOver: true });
     const region = screen.getByRole('region');
-    expect(region.className).toContain('border-red');
+    expect(region.className).toContain('border-primary');
   });
 
   it('should handle card drag over', () => {

@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 
-// Mock localStorage for testing
 const localStorageMock = (() => {
   let store = {};
   return {
@@ -25,7 +24,6 @@ Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,
 });
 
-// Import after mocking
 import {
   saveToStorage,
   loadFromStorage,

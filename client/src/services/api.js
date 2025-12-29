@@ -1,10 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
 
-const MOCK_DELAY = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test' ? 0 : 300; // Increased delay for realism
+const MOCK_DELAY = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test' ? 0 : 300;
 const FAILURE_RATE = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test' ? 0 : 0.05;
 const SERVER_STORAGE_KEY = 'mock_server_db';
 
-// Helper to interact with the "Server DB"
 const getDB = () => {
   try {
     const data = localStorage.getItem(SERVER_STORAGE_KEY);
@@ -17,7 +16,7 @@ const getDB = () => {
 
 const saveDB = (data) => {
   localStorage.setItem(SERVER_STORAGE_KEY, JSON.stringify(data));
-  // Dispatch event for cross-tab sync simulation (optional but helpful)
+  
   window.dispatchEvent(new Event('storage'));
 };
 
@@ -249,12 +248,9 @@ export const checkForConflicts = (localItem, serverItem) => {
   const localVersion = localItem.version || 0;
   const serverVersion = serverItem.version || 0;
 
-  // STRICT VERSION CHECK
-  // Conflict if server is ahead (version > local) OR
-  // if versions are equal but detecting change (rare race condition, but good to check timestamps)
-  // For this exercise, strict version > local is the key indicator of "Server has newer data"
+
   if (serverVersion > localVersion) {
-    // Check if content is actually different to avoid 'fake' conflicts
+   
     const localStr = JSON.stringify({ ...localItem, lastModifiedAt: 0, version: 0, syncStatus: undefined });
     const serverStr = JSON.stringify({ ...serverItem, lastModifiedAt: 0, version: 0, syncStatus: undefined });
 
@@ -268,7 +264,6 @@ export const checkForConflicts = (localItem, serverItem) => {
         detectedAt: new Date().toISOString(),
       };
     } else {
-      // Content is identical, auto-update local version to match server
       return null;
     }
   }
@@ -277,8 +272,8 @@ export const checkForConflicts = (localItem, serverItem) => {
 };
 
 export const threeWayMerge = (base, local, server) => {
-  // ... logic remains if needed, but reducing complexity for stability
-  return server; // Default to server preference in merge utility for now
+
+  return server;
 };
 
 export default {

@@ -6,7 +6,6 @@ import { useUndoRedo } from '../hooks/useUndoRedo';
 
 const wrapper = ({ children }) => <BoardProvider>{children}</BoardProvider>;
 
-// Combined hook for testing both board state and undo/redo together
 const useCombinedHooks = () => {
   const boardState = useBoardState();
   const undoRedo = useUndoRedo();
