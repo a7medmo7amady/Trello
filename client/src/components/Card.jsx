@@ -1,19 +1,5 @@
 import { memo, useCallback } from 'react';
 
-/**
- * Card Component
- *
- * Renders a single task card with drag & drop support.
- * Memoized to prevent unnecessary re-renders in large lists.
- *
- * @param {Object} props
- * @param {Object} props.card - Card data object
- * @param {string} props.listId - Parent list ID
- * @param {boolean} props.isDragging - Whether this card is being dragged
- * @param {Function} props.onDragStart - Drag start handler
- * @param {Function} props.onDragEnd - Drag end handler
- * @param {Function} props.onClick - Click handler to open detail modal
- */
 const Card = ({
   card,
   listId,
@@ -44,9 +30,6 @@ const Card = ({
     [card, onClick]
   );
 
-  // ==========================================
-  // Tag Colors
-  // ==========================================
 
   const getTagColor = (tag) => {
     // Determine hash for consistency
@@ -55,8 +38,6 @@ const Card = ({
       hash = tag.charCodeAt(i) + ((hash << 5) - hash);
     }
 
-    // Monochrome / Red-Accent Tag Palette for Dark Theme
-    // All tags should look good on a black background
     const colors = [
       'bg-red-900/30 text-red-200 border-red-800/50',
       'bg-neutral-800 text-neutral-300 border-neutral-700',

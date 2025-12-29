@@ -124,6 +124,15 @@ useEffect(() => {
 >
 ```
 
+**Conflict Modal** (`src/components/Toolbar.jsx`):
+```jsx
+<div
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="conflict-modal-title"
+>
+```
+
 ## Color Contrast
 
 ### WCAG AA Compliance
