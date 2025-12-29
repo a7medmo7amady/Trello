@@ -1,6 +1,6 @@
 import { createContext, useReducer, useEffect, useMemo } from 'react';
 import { boardReducer, initialState, ACTIONS } from './boardReducer';
-import { loadFromStorage, saveToStorage, loadFromStorageAsync } from '../services/storage';
+import { loadFromStorage, saveToStorage } from '../services/storage';
 
 export const BoardStateContext = createContext(null);
 export const BoardDispatchContext = createContext(null);
@@ -79,37 +79,8 @@ export const BoardProvider = ({ children }) => {
     };
   }, []);
 
-  // Async load for IndexedDB fallback
-  useEffect(() => {
-    const loadAsync = async () => {
-      // Only attempt to load if we don't have valid data or if we suspect we might have more data in IDB
-      // But simpler: just try to load from IDB if we're using seed data or partial data
-      try {
-        const stored = await loadFromStorageAsync(STORAGE_KEY);
-        if (stored && stored.lists && stored.lists.length > 0) {
-          // We found data in storage (maybe IDB) that we missed in the initial sync load
-          // Only dispatch if it's different/newer, but for now just loading it if state is default
-          // Checking if current state is essentially default/empty compared to loaded
-          if (JSON.stringify(state.lists) === JSON.stringify(seedData.lists) &&
-            JSON.stringify(state.cards) === JSON.stringify(seedData.cards) &&
-            stored.cards.length !== seedData.cards.length) {
-
-            dispatch({
-              type: ACTIONS.APPLY_SERVER_STATE,
-              payload: {
-                lists: stored.lists,
-                cards: stored.cards,
-                lastSyncedAt: stored.lastSyncedAt,
-              },
-            });
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load async data:", err);
-      }
-    };
-    loadAsync();
-  }, []);
+  // Note: Async server sync is handled by useOfflineSync hook
+  // This prevents duplicate loading and race conditions
 
 
   const contextValue = useMemo(() => state, [state]);

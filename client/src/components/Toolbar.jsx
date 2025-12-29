@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useState, useEffect, useRef } from 'react';
 import { useUndoRedo } from '../hooks/useUndoRedo';
 import { useOfflineSync } from '../hooks/useOfflineSync';
 import { useBoardState } from '../hooks/useBoardState';
@@ -11,6 +11,17 @@ const Toolbar = () => {
   const { state, resolveConflict } = useBoardState();
   const [showConflictModal, setShowConflictModal] = useState(false);
   const [currentConflict, setCurrentConflict] = useState(null);
+  const prevConflictsLengthRef = useRef(0);
+
+  // Auto-show conflict modal when new conflicts are detected
+  useEffect(() => {
+    if (conflicts.length > 0 && conflicts.length > prevConflictsLengthRef.current) {
+      // New conflict detected - auto show modal
+      setCurrentConflict(conflicts[0]);
+      setShowConflictModal(true);
+    }
+    prevConflictsLengthRef.current = conflicts.length;
+  }, [conflicts]);
 
   const handleUndo = useCallback(() => {
     if (canUndo) {

@@ -1,22 +1,24 @@
 import { v4 as uuidv4 } from 'uuid';
+import { loadFromStorage, saveToStorage, loadFromStorageAsync } from './storage';
 
 const MOCK_DELAY = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test' ? 0 : 300;
-const FAILURE_RATE = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test' ? 0 : 0.05;
+const FAILURE_RATE = 0; // Disabled random failures for stability
 const SERVER_STORAGE_KEY = 'mock_server_db';
 
-const getDB = () => {
+// We need an async getter since we might read from IDB
+const getDB = async () => {
   try {
-    const data = localStorage.getItem(SERVER_STORAGE_KEY);
+    const data = await loadFromStorageAsync(SERVER_STORAGE_KEY);
     if (!data) return { lists: [], cards: [], lastModified: Date.now() };
-    return JSON.parse(data);
+    return data;
   } catch (e) {
     return { lists: [], cards: [], lastModified: Date.now() };
   }
 };
 
 const saveDB = (data) => {
-  localStorage.setItem(SERVER_STORAGE_KEY, JSON.stringify(data));
-  
+  saveToStorage(SERVER_STORAGE_KEY, data);
+  // Dispatch storage event to notify other tabs/listeners if needed
   window.dispatchEvent(new Event('storage'));
 };
 
@@ -29,8 +31,8 @@ const simulateLatency = async () => {
   await delay(latency);
 };
 
-export const initializeServerState = (state) => {
-  const currentDB = getDB();
+export const initializeServerState = async (state) => {
+  const currentDB = await getDB();
   // Only initialize if DB is empty to avoid overwriting persistent data on reload
   if (currentDB.lists.length === 0 && currentDB.cards.length === 0) {
     saveDB({
@@ -48,7 +50,7 @@ export const getServerState = async () => {
     throw new Error('Network error: Failed to fetch server state');
   }
 
-  const db = getDB();
+  const db = await getDB();
   return {
     lists: JSON.parse(JSON.stringify(db.lists)),
     cards: JSON.parse(JSON.stringify(db.cards)),
@@ -60,7 +62,7 @@ export const createList = async (list) => {
   await simulateLatency();
   if (shouldFail()) throw new Error('Network error: Failed to create list');
 
-  const db = getDB();
+  const db = await getDB();
   const serverList = {
     ...list,
     lastModifiedAt: new Date().toISOString(),
@@ -78,7 +80,7 @@ export const updateList = async (listId, updates) => {
   await simulateLatency();
   if (shouldFail()) throw new Error('Network error: Failed to update list');
 
-  const db = getDB();
+  const db = await getDB();
   const index = db.lists.findIndex((l) => l.id === listId);
   if (index === -1) throw new Error('List not found');
 
@@ -101,7 +103,7 @@ export const deleteList = async (listId) => {
   await simulateLatency();
   if (shouldFail()) throw new Error('Network error: Failed to delete list');
 
-  const db = getDB();
+  const db = await getDB();
   db.lists = db.lists.filter((l) => l.id !== listId);
   db.cards = db.cards.filter((c) => c.listId !== listId);
   db.lastModified = Date.now();
@@ -114,7 +116,7 @@ export const createCard = async (card) => {
   await simulateLatency();
   if (shouldFail()) throw new Error('Network error: Failed to create card');
 
-  const db = getDB();
+  const db = await getDB();
   const serverCard = {
     ...card,
     lastModifiedAt: new Date().toISOString(),
@@ -132,7 +134,7 @@ export const updateCard = async (cardId, updates) => {
   await simulateLatency();
   if (shouldFail()) throw new Error('Network error: Failed to update card');
 
-  const db = getDB();
+  const db = await getDB();
   const index = db.cards.findIndex((c) => c.id === cardId);
   if (index === -1) throw new Error('Card not found');
 
@@ -155,7 +157,7 @@ export const deleteCard = async (cardId) => {
   await simulateLatency();
   if (shouldFail()) throw new Error('Network error: Failed to delete card');
 
-  const db = getDB();
+  const db = await getDB();
   db.cards = db.cards.filter((c) => c.id !== cardId);
   db.lastModified = Date.now();
   saveDB(db);
@@ -167,7 +169,7 @@ export const moveCard = async (cardId, sourceListId, targetListId, targetIndex) 
   await simulateLatency();
   if (shouldFail()) throw new Error('Network error: Failed to move card');
 
-  const db = getDB();
+  const db = await getDB();
   const cardIndex = db.cards.findIndex((c) => c.id === cardId);
   if (cardIndex === -1) throw new Error('Card not found');
 
@@ -250,7 +252,7 @@ export const checkForConflicts = (localItem, serverItem) => {
 
 
   if (serverVersion > localVersion) {
-   
+
     const localStr = JSON.stringify({ ...localItem, lastModifiedAt: 0, version: 0, syncStatus: undefined });
     const serverStr = JSON.stringify({ ...serverItem, lastModifiedAt: 0, version: 0, syncStatus: undefined });
 

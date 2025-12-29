@@ -37,7 +37,7 @@ export const useOfflineSync = () => {
     const init = async () => {
       // Initialize mocks if empty
       if (stateRef.current?.lists && stateRef.current?.cards) {
-        api.initializeServerState({ lists: stateRef.current.lists, cards: stateRef.current.cards });
+        await api.initializeServerState({ lists: stateRef.current.lists, cards: stateRef.current.cards });
       }
 
       // Fetch initial server state
@@ -124,8 +124,6 @@ export const useOfflineSync = () => {
       // If no conflicts, auto-update local state to match server (convergence)
       // This is crucial for "Use Server" to stick, and for general sync
       if (conflicts.length === 0) {
-        // Optimization: Only dispatch if actually deeper diff? 
-        // For now, robustly applying server state ensures consistency
         dispatch({
           type: ACTIONS.APPLY_SERVER_STATE,
           payload: {

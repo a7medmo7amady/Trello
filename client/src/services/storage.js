@@ -71,10 +71,11 @@ export const saveToStorage = (key, data) => {
     const serialized = JSON.stringify(data);
     localStorage.setItem(key, serialized);
 
-    saveToIndexedDB(key, data).catch(() => {});
+    saveToIndexedDB(key, data).catch(() => { });
   } catch (error) {
     if (error.name === 'QuotaExceededError') {
-      saveToIndexedDB(key, data).catch(() => {});
+      console.warn('LocalStorage quota exceeded. Saving to IndexedDB instead.');
+      saveToIndexedDB(key, data).catch(() => { });
     }
   }
 };
@@ -113,7 +114,7 @@ export const removeFromStorage = (key) => {
         const store = transaction.objectStore(STORE_NAME);
         store.delete(key);
       })
-      .catch(() => {});
+      .catch(() => { });
   } catch {
     // ignore
   }
@@ -129,7 +130,7 @@ export const clearStorage = () => {
         const store = transaction.objectStore(STORE_NAME);
         store.clear();
       })
-      .catch(() => {});
+      .catch(() => { });
   } catch {
     // ignore
   }
